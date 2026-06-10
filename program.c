@@ -9,14 +9,13 @@ typedef struct {
     int    numeroConta;
     char   nome[TAM_NOME];
     double saldo;
-    int    ativo; 
+    int    ativo;
 } Cliente;
 
 void limparBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
-
 
 void pausar() {
     printf("\nPressione ENTER para continuar...");
@@ -32,14 +31,12 @@ void cadastrarCliente(FILE *fp) {
     scanf("%d", &posicao);
     limparBuffer();
 
-    
     if (posicao < 0) {
         printf("Erro: posicao invalida.\n");
         pausar();
         return;
     }
 
-    
     Cliente existente;
     fseek(fp, (long)posicao * sizeof(Cliente), SEEK_SET);
     size_t lidos = fread(&existente, sizeof(Cliente), 1, fp);
@@ -203,9 +200,9 @@ void listarClientes(FILE *fp) {
         }
     }
 
-    if (total == 0) {
+    if (total == 0)
         printf("Nenhum cliente ativo encontrado.\n");
-    } else {
+    else {
         printf("----------------------------------------------\n");
         printf("Total de clientes ativos: %d\n", total);
     }
@@ -218,8 +215,6 @@ void repetirListagem(FILE *fp) {
     printf("Ponteiro de leitura retornou ao inicio do arquivo.\n");
     listarClientes(fp);
 }
-
-/* ---------- main ---------- */
 
 int main() {
     FILE *fp;
