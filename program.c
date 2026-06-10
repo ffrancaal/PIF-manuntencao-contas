@@ -9,7 +9,7 @@ typedef struct {
     int    numeroConta;
     char   nome[TAM_NOME];
     double saldo;
-    int    ativo; /* 1 = ativo, 0 = encerrado */
+    int    ativo;
 } Cliente;
 
 void limparBuffer() {
