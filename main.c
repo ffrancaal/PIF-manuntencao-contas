@@ -22,6 +22,28 @@ void pausar() {
     getchar();
 }
 
+static void _listar(FILE *fp) {
+    Cliente c;
+    int total = 0;
+
+    printf("%-6s %-30s %s\n", "Conta", "Nome", "Saldo");
+    printf("----------------------------------------------\n");
+
+    while (fread(&c, sizeof(Cliente), 1, fp) == 1) {
+        if (c.ativo == 1) {
+            printf("%-6d %-30s R$ %.2f\n", c.numeroConta, c.nome, c.saldo);
+            total++;
+        }
+    }
+
+    if (total == 0)
+        printf("Nenhum cliente ativo encontrado.\n");
+    else {
+        printf("----------------------------------------------\n");
+        printf("Total de clientes ativos: %d\n", total);
+    }
+}
+
 void cadastrarCliente(FILE *fp) {
     Cliente c;
     int posicao;
@@ -185,35 +207,45 @@ void encerrarConta(FILE *fp) {
 }
 
 void listarClientes(FILE *fp) {
-    Cliente c;
-    int total = 0;
-
     printf("\n=== LISTA DE CLIENTES ===\n");
-    printf("%-6s %-30s %s\n", "Conta", "Nome", "Saldo");
-    printf("----------------------------------------------\n");
-
     rewind(fp);
-    while (fread(&c, sizeof(Cliente), 1, fp) == 1) {
-        if (c.ativo == 1) {
-            printf("%-6d %-30s R$ %.2f\n", c.numeroConta, c.nome, c.saldo);
-            total++;
-        }
-    }
-
-    if (total == 0)
-        printf("Nenhum cliente ativo encontrado.\n");
-    else {
-        printf("----------------------------------------------\n");
-        printf("Total de clientes ativos: %d\n", total);
-    }
-
+    _listar(fp);
     pausar();
 }
 
 void repetirListagem(FILE *fp) {
+    Cliente c;
+    long posAntes;
+
     printf("\n=== REPETINDO LISTAGEM (rewind) ===\n");
-    printf("Ponteiro de leitura retornou ao inicio do arquivo.\n");
-    listarClientes(fp);
+
+    fseek(fp, 0, SEEK_END);
+    long numRegistros = ftell(fp) / (long)sizeof(Cliente);
+
+    if (numRegistros == 0) {
+        printf("Arquivo vazio. Nenhum registro para demonstrar.\n");
+        pausar();
+        return;
+    }
+
+    long meio = (numRegistros / 2) * (long)sizeof(Cliente);
+    fseek(fp, meio, SEEK_SET);
+    fread(&c, sizeof(Cliente), 1, fp);
+
+    posAntes = ftell(fp);
+    printf("Posicao do ponteiro antes do rewind : byte %-6ld"
+           " (apos registro %ld de %ld)\n",
+           posAntes,
+           posAntes / (long)sizeof(Cliente),
+           numRegistros);
+
+    rewind(fp);
+
+    printf("Posicao do ponteiro apos  o rewind  : byte %ld\n", ftell(fp));
+    printf("Relendo o arquivo do inicio:\n\n");
+
+    _listar(fp);
+    pausar();
 }
 
 int main() {
