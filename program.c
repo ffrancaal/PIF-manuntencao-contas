@@ -9,7 +9,7 @@ typedef struct {
     int    numeroConta;
     char   nome[TAM_NOME];
     double saldo;
-    int    ativo;
+    int    ativo; 
 } Cliente;
 
 void limparBuffer() {
@@ -17,9 +17,9 @@ void limparBuffer() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
+
 void pausar() {
     printf("\nPressione ENTER para continuar...");
-    limparBuffer();
     getchar();
 }
 
@@ -32,9 +32,16 @@ void cadastrarCliente(FILE *fp) {
     scanf("%d", &posicao);
     limparBuffer();
 
-    /* verifica se posicao ja esta ocupada por cliente ativo */
-    fseek(fp, (long)posicao * sizeof(Cliente), SEEK_SET);
+    
+    if (posicao < 0) {
+        printf("Erro: posicao invalida.\n");
+        pausar();
+        return;
+    }
+
+    
     Cliente existente;
+    fseek(fp, (long)posicao * sizeof(Cliente), SEEK_SET);
     size_t lidos = fread(&existente, sizeof(Cliente), 1, fp);
     if (lidos == 1 && existente.ativo == 1) {
         printf("Erro: posicao %d ja possui um cliente ativo.\n", posicao);
@@ -46,6 +53,15 @@ void cadastrarCliente(FILE *fp) {
     scanf("%d", &c.numeroConta);
     limparBuffer();
 
+    rewind(fp);
+    while (fread(&existente, sizeof(Cliente), 1, fp) == 1) {
+        if (existente.ativo == 1 && existente.numeroConta == c.numeroConta) {
+            printf("Erro: numero de conta %d ja existe.\n", c.numeroConta);
+            pausar();
+            return;
+        }
+    }
+
     printf("Nome            : ");
     fgets(c.nome, TAM_NOME, stdin);
     c.nome[strcspn(c.nome, "\n")] = '\0';
@@ -55,6 +71,17 @@ void cadastrarCliente(FILE *fp) {
     limparBuffer();
 
     c.ativo = 1;
+
+    fseek(fp, 0, SEEK_END);
+    long numRegistros = ftell(fp) / (long)sizeof(Cliente);
+    if ((long)posicao > numRegistros) {
+        Cliente vazio;
+        memset(&vazio, 0, sizeof(Cliente));
+        for (long i = numRegistros; i < (long)posicao; i++) {
+            fseek(fp, i * (long)sizeof(Cliente), SEEK_SET);
+            fwrite(&vazio, sizeof(Cliente), 1, fp);
+        }
+    }
 
     fseek(fp, (long)posicao * sizeof(Cliente), SEEK_SET);
     fwrite(&c, sizeof(Cliente), 1, fp);
@@ -188,7 +215,6 @@ void listarClientes(FILE *fp) {
 
 void repetirListagem(FILE *fp) {
     printf("\n=== REPETINDO LISTAGEM (rewind) ===\n");
-    rewind(fp);
     printf("Ponteiro de leitura retornou ao inicio do arquivo.\n");
     listarClientes(fp);
 }
